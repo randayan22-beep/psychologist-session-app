@@ -464,12 +464,15 @@
 
                 <div class="client-input-group">
                     <label for="apiKey">🔑 Claude API Key</label>
-                    <input 
-                        type="password" 
-                        id="apiKey" 
-                        placeholder="הדבק את ה-API Key שלך מ-console.anthropic.com" 
-                        autocomplete="off"
-                    >
+                    <div style="display: flex; gap: 0.75rem;">
+                        <input 
+                            type="password" 
+                            id="apiKey" 
+                            placeholder="הדבק את ה-API Key שלך מ-console.anthropic.com" 
+                            autocomplete="off"
+                        >
+                        <button class="btn-primary" onclick="saveApiKey()" style="flex: 0 0 auto; padding: 0.75rem 1rem;">שמור</button>
+                    </div>
                     <p style="font-size: 0.8rem; color: #666; margin-top: 0.25rem;">
                         🔒 המפתח שמור בטלפון שלך בלבד, לא נשלח לשרת
                     </p>
@@ -619,12 +622,32 @@
 
         const STATE_KEY = 'clinical_sessions_storage';
         const CLIENTS_KEY = 'clinical_clients_storage';
+        const API_KEY_STORAGE = 'claude_api_key_storage';
 
         // Initialize
+        loadApiKey();
         document.getElementById('clientName').focus();
         loadClients();
         loadSessions();
         updateAnalytics();
+
+        // ===== API KEY MANAGEMENT =====
+        function saveApiKey() {
+            const apiKey = document.getElementById('apiKey').value.trim();
+            if (!apiKey) {
+                showError('אנא הדבק את ה-API Key');
+                return;
+            }
+            localStorage.setItem(API_KEY_STORAGE, apiKey);
+            showSuccess('ה-API Key נשמר בהצלחה!');
+        }
+
+        function loadApiKey() {
+            const savedKey = localStorage.getItem(API_KEY_STORAGE);
+            if (savedKey) {
+                document.getElementById('apiKey').value = savedKey;
+            }
+        }
 
         // Search clients
         document.getElementById('searchClients').addEventListener('input', (e) => {
@@ -760,9 +783,13 @@
                 return;
             }
 
-            const apiKey = document.getElementById('apiKey').value.trim();
+            let apiKey = document.getElementById('apiKey').value.trim();
             if (!apiKey) {
-                showError('אנא הדבק את Claude API Key שלך');
+                apiKey = localStorage.getItem(API_KEY_STORAGE);
+            }
+            
+            if (!apiKey) {
+                showError('אנא הדבק את Claude API Key שלך בחלק העליון ולחץ שמור');
                 return;
             }
 
@@ -894,7 +921,9 @@ Be precise with speaker identification. If uncertain about a speaker, make your 
 
         function copyToClipboard(sessionId) {
             const sessions = JSON.parse(localStorage.getItem(STATE_KEY) || '[]');
-            const session = sessions.find(s => s.id === sessionId || s.id == sessionId);
+            // Convert to number if it's a string
+            const numericId = typeof sessionId === 'string' ? parseInt(sessionId) : sessionId;
+            const session = sessions.find(s => s.id === numericId);
             if (session) {
                 navigator.clipboard.writeText(session.transcript);
                 alert('התמלול הועתק ללוח');
@@ -1120,7 +1149,7 @@ Be precise with speaker identification. If uncertain about a speaker, make your 
                             <div class="section-title">תמלול מלא</div>
                             <div class="transcript-text">${escapeHtml(session.transcript)}</div>
                             <div class="action-buttons">
-                                <button class="btn-secondary copy-btn" onclick="copyToClipboard('${session.id}')">העתק תמלול</button>
+                                <button class="btn-secondary copy-btn" onclick="copyToClipboard(${session.id})">העתק תמלול</button>
                                 <button class="btn-danger copy-btn" onclick="deleteSession(${session.id})">מחק</button>
                             </div>
                         </div>
@@ -1276,10 +1305,13 @@ Be precise with speaker identification. If uncertain about a speaker, make your 
 
         async function transcribeSummary(clientId, audioBlob) {
             const statusDiv = document.getElementById(`summaryStatus-${clientId}`);
-            const apiKey = document.getElementById('apiKey').value.trim();
+            let apiKey = document.getElementById('apiKey').value.trim();
+            if (!apiKey) {
+                apiKey = localStorage.getItem(API_KEY_STORAGE);
+            }
             
             if (!apiKey) {
-                statusDiv.innerHTML = '<span style="color: #d32f2f;">שגיאה: אנא הדבק את API Key בטאב הקלטה</span>';
+                statusDiv.innerHTML = '<span style="color: #d32f2f;">שגיאה: אנא הדבק את API Key בטאב הקלטה ולחץ שמור</span>';
                 return;
             }
 
