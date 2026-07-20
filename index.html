@@ -463,22 +463,6 @@
                 <div class="error-message" id="errorMsg"></div>
 
                 <div class="client-input-group">
-                    <label for="apiKey">🔑 Claude API Key</label>
-                    <div style="display: flex; gap: 0.75rem;">
-                        <input 
-                            type="password" 
-                            id="apiKey" 
-                            placeholder="הדבק את ה-API Key שלך מ-console.anthropic.com" 
-                            autocomplete="off"
-                        >
-                        <button class="btn-primary" onclick="saveApiKey()" style="flex: 0 0 auto; padding: 0.75rem 1rem;">שמור</button>
-                    </div>
-                    <p style="font-size: 0.8rem; color: #666; margin-top: 0.25rem;">
-                        🔒 המפתח שמור בטלפון שלך בלבד, לא נשלח לשרת
-                    </p>
-                </div>
-
-                <div class="client-input-group">
                     <label for="clientName">שם המטופל</label>
                     <input 
                         type="text" 
@@ -626,29 +610,10 @@
         const API_KEY_PERMANENT = 'sk-ant-api03-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';
 
         // Initialize
-        loadApiKey();
         document.getElementById('clientName').focus();
         loadClients();
         loadSessions();
         updateAnalytics();
-
-        // ===== API KEY MANAGEMENT =====
-        function saveApiKey() {
-            const apiKey = document.getElementById('apiKey').value.trim();
-            if (!apiKey) {
-                showError('אנא הדבק את ה-API Key');
-                return;
-            }
-            localStorage.setItem(API_KEY_STORAGE, apiKey);
-            showSuccess('ה-API Key נשמר בהצלחה!');
-        }
-
-        function loadApiKey() {
-            const savedKey = localStorage.getItem(API_KEY_STORAGE);
-            if (savedKey) {
-                document.getElementById('apiKey').value = savedKey;
-            }
-        }
 
         // Search clients
         document.getElementById('searchClients').addEventListener('input', (e) => {
@@ -781,16 +746,6 @@
         async function transcribeRecording() {
             if (!window.currentAudioBlob || !currentClientName) {
                 showError('לא זמין אודיו או שם מטופל');
-                return;
-            }
-
-            let apiKey = document.getElementById('apiKey').value.trim();
-            if (!apiKey) {
-                apiKey = localStorage.getItem(API_KEY_STORAGE);
-            }
-            
-            if (!apiKey) {
-                showError('אנא הדבק את Claude API Key שלך בחלק העליון ולחץ שמור');
                 return;
             }
 
@@ -1316,16 +1271,6 @@ Be precise with speaker identification. If uncertain about a speaker, make your 
 
         async function transcribeSummary(clientId, audioBlob) {
             const statusDiv = document.getElementById(`summaryStatus-${clientId}`);
-            let apiKey = document.getElementById('apiKey').value.trim();
-            if (!apiKey) {
-                apiKey = localStorage.getItem(API_KEY_STORAGE);
-            }
-            
-            if (!apiKey) {
-                statusDiv.innerHTML = '<span style="color: #d32f2f;">שגיאה: אנא הדבק את API Key בטאב הקלטה ולחץ שמור</span>';
-                return;
-            }
-
             statusDiv.innerHTML = '<div class="processing-spinner"></div> מעבד סיכום...';
 
             try {
@@ -1411,5 +1356,6 @@ Be precise with speaker identification. If uncertain about a speaker, make your 
             }
         }
     </script>
+    <script src="backend-integration.js"></script>
 </body>
 </html>
